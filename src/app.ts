@@ -32,13 +32,13 @@ import { logAnalyzedList } from './end-log';
   // * ---------------- fetching
 
   const globalRegistry = registryUrl();
-  console.log(`current registry set: ${globalRegistry}`);
+  console.log(`registry = "${globalRegistry}"`);
 
   const spinner = ora('Fetching...').start();
 
   const [{ deprecated }, { useful }] = await Promise.all([
-    fetchList(installed),
-    fetchList(missed),
+    fetchList(installed, spinner),
+    fetchList(missed, spinner),
   ]);
 
   spinner.stop();

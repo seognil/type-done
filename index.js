@@ -12,8 +12,32 @@ var readPkgUp = _interopDefault(require('read-pkg-up'));
 var registryUrl = _interopDefault(require('registry-url'));
 var args = _interopDefault(require('args'));
 var commandExists = _interopDefault(require('command-exists'));
-var util = require('util');
-require('axios');
+var fetch = _interopDefault(require('node-fetch'));
+
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing permissions
+and limitations under the License.
+***************************************************************************** */
+
+function __awaiter(thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+}
 
 const tools = {
     yarn: { install: `yarn add -D`, uninstall: `yarn remove` },
@@ -76,22 +100,26 @@ const parsePkgTypes = (pkgJson) => {
     };
 };
 
-const execAsync = util.promisify(child_process.exec);
+// * default is: https://registry.npmjs.org/
 const globalRegistry = registryUrl();
-const fetchFromInfo = async (name) => {
-    const { stdout } = await execAsync(`npm view ${name} name deprecated version --json`).catch(() => ({ stdout: '{}' }));
-    const { version, deprecated } = JSON.parse(stdout);
-    const useful = version !== undefined && !deprecated;
-    return { name, useful, deprecated: Boolean(deprecated) };
-};
-const fetchList = async (list) => {
-    // const webList = await Promise.all(list.map((name) => fetchFromWeb(name)));
-    // const founds = webList.filter((e) => e.found).map((e) => e.name);
-    const infoList = await Promise.all(list.map((name) => fetchFromInfo(name)));
-    const deprecated = infoList.filter((e) => e.deprecated).map((e) => e.name);
-    const useful = infoList.filter((e) => e.useful).map((e) => e.name);
+// * ----------------
+const fetchSingle = (name, spinner) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const url = `${globalRegistry}/${name}`.replace(/(?<!:)\/\//, '/');
+    const res = yield fetch(url).then((e) => e.json());
+    const deprecated = Object.values((_a = res === null || res === void 0 ? void 0 : res.versions) !== null && _a !== void 0 ? _a : {}).some((e) => e.deprecated !== undefined);
+    const useful = (res === null || res === void 0 ? void 0 : res.versions) !== undefined && !deprecated;
+    if (spinner)
+        spinner.text = name;
+    return { name, useful, deprecated };
+});
+// * ----------------
+const fetchList = (list, spinner) => __awaiter(void 0, void 0, void 0, function* () {
+    const results = yield Promise.all(list.map((name) => fetchSingle(name, spinner)));
+    const deprecated = results.filter((e) => e.deprecated).map((e) => e.name);
+    const useful = results.filter((e) => e.useful).map((e) => e.name);
     return { deprecated, useful };
-};
+});
 
 const logAnalyzedList = ({ deprecated, unused, useful }) => {
     const b = (dep) => chalk.bold(dep);
@@ -115,10 +143,10 @@ const logAnalyzedList = ({ deprecated, unused, useful }) => {
     }
 };
 
-(async () => {
+(() => __awaiter(void 0, void 0, void 0, function* () {
     const startTime = Date.now();
     // * ---------------- check if package.json exists
-    const pkgData = await readPkgUp();
+    const pkgData = yield readPkgUp();
     if (pkgData === undefined) {
         console.error('No package.json file found!');
         process.exit();
@@ -127,11 +155,11 @@ const logAnalyzedList = ({ deprecated, unused, useful }) => {
     const { installed, unused, missed } = parsePkgTypes(pkgData.packageJson);
     // * ---------------- fetching
     const globalRegistry = registryUrl();
-    console.log(`current registry set: ${globalRegistry}`);
+    console.log(`registry = "${globalRegistry}"`);
     const spinner = ora('Fetching...').start();
-    const [{ deprecated }, { useful }] = await Promise.all([
-        fetchList(installed),
-        fetchList(missed),
+    const [{ deprecated }, { useful }] = yield Promise.all([
+        fetchList(installed, spinner),
+        fetchList(missed, spinner),
     ]);
     spinner.stop();
     // * ---------------- run uninstall and install
@@ -150,4 +178,4 @@ const logAnalyzedList = ({ deprecated, unused, useful }) => {
         secondsDecimalDigits: 2,
     });
     console.log(chalk.green(figures.tick, `All types are OK. Done in ${deltaTime}`));
-})();
+}))();

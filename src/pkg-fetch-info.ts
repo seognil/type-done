@@ -1,48 +1,46 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import axios from 'axios';
+import fetch from 'node-fetch';
 import registryUrl from 'registry-url';
+import { Ora } from 'ora';
 
-const execAsync = promisify(exec);
-
+// * default is: https://registry.npmjs.org/
 const globalRegistry = registryUrl();
 
-const fetchFromWeb = async (
+// * ----------------
+
+export const fetchSingle = async (
   name: string,
-): Promise<{ name: string; found: boolean }> => {
+  spinner?: Ora,
+): Promise<{
+  name: string;
+  useful: boolean;
+  deprecated: boolean;
+}> => {
   const url = `${globalRegistry}/${name}`.replace(/(?<!:)\/\//, '/');
 
-  const found = await axios(url)
-    .then((resp) => resp.status === 200)
-    .catch(() => false);
+  const res = await fetch(url).then((e) => e.json());
+  const deprecated = Object.values(res?.versions ?? {}).some(
+    (e: any) => e.deprecated !== undefined,
+  );
+  const useful = res?.versions !== undefined && !deprecated;
 
-  return { name, found };
+  if (spinner) spinner.text = name;
+  return { name, useful, deprecated };
 };
 
-const fetchFromInfo = async (
-  name: string,
-): Promise<{ name: string; useful: boolean; deprecated: boolean }> => {
-  const { stdout } = await execAsync(
-    `npm view ${name} name deprecated version --json`,
-  ).catch(() => ({ stdout: '{}' }));
-
-  const { version, deprecated } = JSON.parse(stdout);
-  const useful = version !== undefined && !deprecated;
-  return { name, useful, deprecated: Boolean(deprecated) };
-};
+// * ----------------
 
 export const fetchList = async (
   list: string[],
+  spinner?: Ora,
 ): Promise<{
   deprecated: string[];
   useful: string[];
 }> => {
-  // const webList = await Promise.all(list.map((name) => fetchFromWeb(name)));
-  // const founds = webList.filter((e) => e.found).map((e) => e.name);
-
-  const infoList = await Promise.all(list.map((name) => fetchFromInfo(name)));
-  const deprecated = infoList.filter((e) => e.deprecated).map((e) => e.name);
-  const useful = infoList.filter((e) => e.useful).map((e) => e.name);
+  const results = await Promise.all(
+    list.map((name) => fetchSingle(name, spinner)),
+  );
+  const deprecated = results.filter((e) => e.deprecated).map((e) => e.name);
+  const useful = results.filter((e) => e.useful).map((e) => e.name);
 
   return { deprecated, useful };
 };

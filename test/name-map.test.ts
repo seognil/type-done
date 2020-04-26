@@ -8,7 +8,7 @@ describe('test package name mapping', () => {
     expect(dep2type('@babel/core')).toBe('@types/babel__core');
   });
 
-  test('ora', () => {
+  test('ora reverse', () => {
     expect(type2dep('@types/ora')).toBe('ora');
   });
   test('@babel reverse ', () => {

@@ -1,8 +1,27 @@
 import { parsePkgTypes } from './../src/pkg-json-analyze';
-import { fetchList } from '../src/pkg-fetch-info';
+import { fetchList, fetchSingle } from '../src/pkg-fetch-info';
 import { pkgObjCase } from './data-case';
 
-describe('test fetch', () => {
+describe('test fetch single', () => {
+  test('deprecated', async () => {
+    const result = await fetchSingle('@types/ora');
+    expect(result).toMatchObject({ useful: false, deprecated: true });
+  });
+
+  test('useful', async () => {
+    const result = await fetchSingle('lodash');
+    expect(result).toMatchObject({ useful: true, deprecated: false });
+  });
+
+  test('not found', async () => {
+    const result = await fetchSingle('rocket-jump-sky-high!');
+    expect(result).toMatchObject({ useful: false, deprecated: false });
+  });
+});
+
+jest.setTimeout(30000);
+
+describe('test fetch list', () => {
   const { installed, missed } = parsePkgTypes(pkgObjCase);
 
   test('check deprecated', async () => {
