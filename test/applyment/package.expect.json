@@ -1,0 +1,16 @@
+{
+  "devDependencies": {
+    "@babel/core": "^7.9.0",
+    "@rollup/plugin-typescript": "^4.1.1",
+    "@types/args": "^3.0.0",
+    "@types/babel__core": "^7.1.7",
+    "@types/jest": "^25.2.1",
+    "@types/node": "^13.13.2",
+    "jest": "^25.3.0"
+  },
+  "dependencies": {
+    "args": "^5.0.1",
+    "chalk": "^4.0.0",
+    "ora": "^4.0.3"
+  }
+}

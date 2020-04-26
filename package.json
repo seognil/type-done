@@ -1,0 +1,49 @@
+{
+  "name": "type-done",
+  "version": "1.0.0",
+  "description": "Install missing DefinitelyTyped packages in one click",
+  "license": "MIT",
+  "repository": "https://github.com/seognil",
+  "main": "index.js",
+  "bin": {
+    "type-done": "index.js"
+  },
+  "author": {
+    "name": "Seognil LC",
+    "email": "seognil@gmail.com",
+    "url": "https://github.com/seognil"
+  },
+  "scripts": {
+    "test": "jest",
+    "build": "rollup -c"
+  },
+  "files": [
+    "index.js",
+    "readme*"
+  ],
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^4.1.1",
+    "@types/args": "^3.0.0",
+    "@types/command-exists": "^1.2.0",
+    "@types/jest": "^25.2.1",
+    "@types/node": "^13.13.2",
+    "jest": "^25.3.0",
+    "rollup": "^2.6.1",
+    "rollup-plugin-hashbang": "^2.2.2",
+    "ts-jest": "^25.3.1",
+    "ts-node": "^8.8.2",
+    "tslib": "^1.11.1",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "args": "^5.0.1",
+    "axios": "^0.19.2",
+    "chalk": "^4.0.0",
+    "command-exists": "^1.2.8",
+    "figures": "^3.2.0",
+    "ora": "^4.0.3",
+    "pretty-ms": "^6.0.1",
+    "read-pkg-up": "^7.0.1",
+    "registry-url": "^5.1.0"
+  }
+}
