@@ -16,7 +16,10 @@ export const fetchSingle = async (
 }> => {
   const url = `${globalRegistry}/${name}`.replace(/(?<!:)\/\//, '/');
 
-  const res = await fetch(url).then((e) => e.json());
+  const res = await fetch(url)
+    .then((e) => e.json())
+    .catch(() => ({ error: 'Not found' }));
+
   const latestVer = res?.['dist-tags']?.latest;
   const deprecated = res?.versions?.[latestVer]?.deprecated !== undefined;
   const useful = res?.versions !== undefined && !deprecated;

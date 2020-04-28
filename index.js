@@ -106,7 +106,9 @@ const globalRegistry = registryUrl();
 const fetchSingle = (name, cb) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
     const url = `${globalRegistry}/${name}`.replace(/(?<!:)\/\//, '/');
-    const res = yield fetch(url).then((e) => e.json());
+    const res = yield fetch(url)
+        .then((e) => e.json())
+        .catch(() => ({ error: 'Not found' }));
     const latestVer = (_a = res === null || res === void 0 ? void 0 : res['dist-tags']) === null || _a === void 0 ? void 0 : _a.latest;
     const deprecated = ((_c = (_b = res === null || res === void 0 ? void 0 : res.versions) === null || _b === void 0 ? void 0 : _b[latestVer]) === null || _c === void 0 ? void 0 : _c.deprecated) !== undefined;
     const useful = (res === null || res === void 0 ? void 0 : res.versions) !== undefined && !deprecated;
