@@ -104,10 +104,11 @@ const parsePkgTypes = (pkgJson) => {
 const globalRegistry = registryUrl();
 // * ----------------
 const fetchSingle = (name, spinner) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _a, _b, _c;
     const url = `${globalRegistry}/${name}`.replace(/(?<!:)\/\//, '/');
     const res = yield fetch(url).then((e) => e.json());
-    const deprecated = Object.values((_a = res === null || res === void 0 ? void 0 : res.versions) !== null && _a !== void 0 ? _a : {}).some((e) => e.deprecated !== undefined);
+    const latestVer = (_a = res === null || res === void 0 ? void 0 : res['dist-tags']) === null || _a === void 0 ? void 0 : _a.latest;
+    const deprecated = ((_c = (_b = res === null || res === void 0 ? void 0 : res.versions) === null || _b === void 0 ? void 0 : _b[latestVer]) === null || _c === void 0 ? void 0 : _c.deprecated) !== undefined;
     const useful = (res === null || res === void 0 ? void 0 : res.versions) !== undefined && !deprecated;
     if (spinner)
         spinner.text = name;

@@ -8,6 +8,11 @@ describe('test fetch single', () => {
     expect(result).toMatchObject({ useful: false, deprecated: true });
   });
 
+  test('latest not deprecated', async () => {
+    const result = await fetchSingle('@types/uuid');
+    expect(result).toMatchObject({ useful: true, deprecated: false });
+  });
+
   test('useful', async () => {
     const result = await fetchSingle('lodash');
     expect(result).toMatchObject({ useful: true, deprecated: false });

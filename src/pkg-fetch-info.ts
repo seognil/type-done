@@ -18,9 +18,8 @@ export const fetchSingle = async (
   const url = `${globalRegistry}/${name}`.replace(/(?<!:)\/\//, '/');
 
   const res = await fetch(url).then((e) => e.json());
-  const deprecated = Object.values(res?.versions ?? {}).some(
-    (e: any) => e.deprecated !== undefined,
-  );
+  const latestVer = res?.['dist-tags']?.latest;
+  const deprecated = res?.versions?.[latestVer]?.deprecated !== undefined;
   const useful = res?.versions !== undefined && !deprecated;
 
   if (spinner) spinner.text = name;
