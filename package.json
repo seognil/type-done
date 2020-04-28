@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Install missing DefinitelyTyped packages in one click",
   "license": "MIT",
-  "repository": "https://github.com/seognil",
+  "repository": "seognil-lab/type-done",
   "main": "index.js",
   "bin": {
     "type-done": "index.js"
