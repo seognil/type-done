@@ -36,9 +36,16 @@ import { logAnalyzedList } from './end-log';
 
   const spinner = ora('Fetching...').start();
 
+  let count = 0;
+  const fetchLen = installed.length + missed.length;
+  const updateSpinner = (name: string) => {
+    spinner.prefixText = chalk.gray(`[${++count}/${fetchLen}]`);
+    spinner.text = `Checking ${name} ...`;
+  };
+
   const [{ deprecated }, { useful }] = await Promise.all([
-    fetchList(installed, spinner),
-    fetchList(missed, spinner),
+    fetchList(installed, updateSpinner),
+    fetchList(missed, updateSpinner),
   ]);
 
   spinner.stop();

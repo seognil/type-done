@@ -103,20 +103,19 @@ const parsePkgTypes = (pkgJson) => {
 // * default is: https://registry.npmjs.org/
 const globalRegistry = registryUrl();
 // * ----------------
-const fetchSingle = (name, spinner) => __awaiter(void 0, void 0, void 0, function* () {
+const fetchSingle = (name, cb) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
     const url = `${globalRegistry}/${name}`.replace(/(?<!:)\/\//, '/');
     const res = yield fetch(url).then((e) => e.json());
     const latestVer = (_a = res === null || res === void 0 ? void 0 : res['dist-tags']) === null || _a === void 0 ? void 0 : _a.latest;
     const deprecated = ((_c = (_b = res === null || res === void 0 ? void 0 : res.versions) === null || _b === void 0 ? void 0 : _b[latestVer]) === null || _c === void 0 ? void 0 : _c.deprecated) !== undefined;
     const useful = (res === null || res === void 0 ? void 0 : res.versions) !== undefined && !deprecated;
-    if (spinner)
-        spinner.text = name;
+    cb === null || cb === void 0 ? void 0 : cb(name);
     return { name, useful, deprecated };
 });
 // * ----------------
-const fetchList = (list, spinner) => __awaiter(void 0, void 0, void 0, function* () {
-    const results = yield Promise.all(list.map((name) => fetchSingle(name, spinner)));
+const fetchList = (list, cb) => __awaiter(void 0, void 0, void 0, function* () {
+    const results = yield Promise.all(list.map((name) => fetchSingle(name, cb)));
     const deprecated = results.filter((e) => e.deprecated).map((e) => e.name);
     const useful = results.filter((e) => e.useful).map((e) => e.name);
     return { deprecated, useful };
@@ -158,9 +157,15 @@ const logAnalyzedList = ({ deprecated, unused, useful }) => {
     const globalRegistry = registryUrl();
     console.log(`registry = "${globalRegistry}"`);
     const spinner = ora('Fetching...').start();
+    let count = 0;
+    const fetchLen = installed.length + missed.length;
+    const updateSpinner = (name) => {
+        spinner.prefixText = chalk.gray(`[${++count}/${fetchLen}]`);
+        spinner.text = `Checking ${name} ...`;
+    };
     const [{ deprecated }, { useful }] = yield Promise.all([
-        fetchList(installed, spinner),
-        fetchList(missed, spinner),
+        fetchList(installed, updateSpinner),
+        fetchList(missed, updateSpinner),
     ]);
     spinner.stop();
     // * ---------------- run uninstall and install

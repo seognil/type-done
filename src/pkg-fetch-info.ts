@@ -1,6 +1,5 @@
 import fetch from 'node-fetch';
 import registryUrl from 'registry-url';
-import { Ora } from 'ora';
 
 // * default is: https://registry.npmjs.org/
 const globalRegistry = registryUrl();
@@ -9,7 +8,7 @@ const globalRegistry = registryUrl();
 
 export const fetchSingle = async (
   name: string,
-  spinner?: Ora,
+  cb?: (name: string) => void,
 ): Promise<{
   name: string;
   useful: boolean;
@@ -22,7 +21,7 @@ export const fetchSingle = async (
   const deprecated = res?.versions?.[latestVer]?.deprecated !== undefined;
   const useful = res?.versions !== undefined && !deprecated;
 
-  if (spinner) spinner.text = name;
+  cb?.(name);
   return { name, useful, deprecated };
 };
 
@@ -30,14 +29,12 @@ export const fetchSingle = async (
 
 export const fetchList = async (
   list: string[],
-  spinner?: Ora,
+  cb?: (name: string) => void,
 ): Promise<{
   deprecated: string[];
   useful: string[];
 }> => {
-  const results = await Promise.all(
-    list.map((name) => fetchSingle(name, spinner)),
-  );
+  const results = await Promise.all(list.map((name) => fetchSingle(name, cb)));
   const deprecated = results.filter((e) => e.deprecated).map((e) => e.name);
   const useful = results.filter((e) => e.useful).map((e) => e.name);
 
