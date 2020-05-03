@@ -7,9 +7,9 @@ type Logger = (arg: {
   useful: string[];
 }) => void;
 
-export const logAnalyzedList: Logger = ({ deprecated, unused, useful }) => {
-  const b = (dep: string) => chalk.bold(dep);
+const b = (dep: string) => chalk.bold(dep);
 
+export const logAnalyzedList: Logger = ({ deprecated, unused, useful }) => {
   // * ---------------- log uninstall list
 
   deprecated
@@ -31,16 +31,12 @@ export const logAnalyzedList: Logger = ({ deprecated, unused, useful }) => {
 
   // * ---------------- log install list
 
-  if (useful.length) {
-    useful.forEach((dep) => {
-      console.log(
-        chalk.green(
-          figures.arrowRight,
-          `${b(dep)} is missing. Waiting for install`,
-        ),
-      );
-    });
-  } else {
-    console.log(chalk.white(figures.squareSmallFilled, `Nothing new`));
-  }
+  useful.forEach((dep) => {
+    console.log(
+      chalk.green(
+        figures.arrowRight,
+        `${b(dep)} is missing. Waiting for install`,
+      ),
+    );
+  });
 };

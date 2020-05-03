@@ -65,9 +65,12 @@ You can also add it to the `scripts` field in your project's `package.json`, to 
 
 ### Option
 
-| Option                         | Description                                                           |
-| ------------------------------ | --------------------------------------------------------------------- |
-| `--tool [value]`, `-t [value]` | Use Specific package manager (default try these in order: yarn , npm) |
+| Option                         | Description                                                     |
+| ------------------------------ | --------------------------------------------------------------- |
+| `-t [value]`, `--tool [value]` | Use specific package manager (default try yarn first, then npm) |
+| `-d`, `--dry-run`              | Dry run, just do anaylze, skip npm steps                        |
+| `-i`, `--install`              | Install missing packages, skip uninstall step                   |
+| `-u`, `--uninstall`            | Uninstall useless packages, skip install step                   |
 
 ## Contributing
 

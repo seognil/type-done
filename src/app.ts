@@ -8,7 +8,7 @@ import prettyMs from 'pretty-ms';
 import readPkgUp from 'read-pkg-up';
 import registryUrl from 'registry-url';
 
-import { toolCommand } from './choose-package-manager';
+import { argv, tools } from './parse-args';
 import { parsePkgTypes } from './pkg-json-analyze';
 import { fetchList } from './pkg-fetch-info';
 import { logAnalyzedList } from './end-log';
@@ -32,7 +32,7 @@ import { logAnalyzedList } from './end-log';
   // * ---------------- fetching
 
   const globalRegistry = registryUrl();
-  console.log(`registry = "${globalRegistry}"`);
+  console.log(`registry: "${globalRegistry}"`);
 
   const spinner = ora('Fetching...').start();
 
@@ -50,20 +50,47 @@ import { logAnalyzedList } from './end-log';
 
   spinner.stop();
 
-  // * ---------------- run uninstall and install
+  // * -------------------------------- run uninstall and install
 
-  logAnalyzedList({ deprecated, unused, useful });
+  const { i, u, dry } = argv;
 
-  const { install, uninstall } = toolCommand;
+  const wouldDeprecated = u ? deprecated : [];
+  const wouldUnused = u ? unused : [];
+  const wouldUseful = i ? useful : [];
 
-  const allUn = [...new Set([...deprecated, ...unused])].join(' ');
-  if (allUn.length) {
-    execSync(`${uninstall} ${allUn}`, { stdio: 'inherit' });
+  const doSomething = [...wouldDeprecated, ...wouldUnused, ...wouldUseful]
+    .length;
+
+  // * ---------------- log
+
+  if (doSomething) {
+    logAnalyzedList({
+      deprecated: wouldDeprecated,
+      unused: wouldUnused,
+      useful: wouldUseful,
+    });
+  } else {
+    console.log(chalk.white(figures.squareSmallFilled, `Nothing to do`));
   }
 
-  const allIn = useful.join(' ');
-  if (allIn.length) {
-    execSync(`${install} ${allIn}`, { stdio: 'inherit' });
+  // * ---------------- run or not
+
+  if (!dry) {
+    const { install, uninstall } = tools[argv.tool];
+
+    const allUn = [...new Set([...deprecated, ...unused])].join(' ');
+    if (u && allUn.length) {
+      execSync(`${uninstall} ${allUn}`, { stdio: 'inherit' });
+    }
+
+    const allIn = useful.join(' ');
+    if (i && allIn.length) {
+      execSync(`${install} ${allIn}`, { stdio: 'inherit' });
+    }
+  } else {
+    if (doSomething) {
+      console.log(chalk.white(figures.line, `Dry run, skipping npm`));
+    }
   }
 
   // * ---------------- completing

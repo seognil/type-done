@@ -39,6 +39,7 @@ function __awaiter(thisArg, _arguments, P, generator) {
     });
 }
 
+// * ----------------------------------------------------------------
 const tools = {
     yarn: { install: `yarn add -D`, uninstall: `yarn remove` },
     npm: { install: `npm install -D`, uninstall: `npm uninstall` },
@@ -49,16 +50,24 @@ if (defaultTool === undefined) {
     console.error('Have you installed Node.js?');
     process.exit();
 }
-// * manually choosing
-args.option('tool', 'Which package manager tool to use', defaultTool);
-const opts = args.parse(process.argv, {
+// * ----------------------------------------------------------------
+args.option('tool', 'Which manager to use', defaultTool);
+args.option('install-only', 'Skip uninstall step');
+args.option('uninstall-only', 'Skip install step');
+args.option('dry-run', 'Only do analyze, skip run npm');
+const res = args.parse(process.argv, {
     name: 'type-done',
     mri: {},
-    mainColor: 'yellow',
+    mainColor: 'bold',
     subColor: 'dim',
 });
-const tool = opts.tool;
-const toolCommand = tools[tool];
+const { i, u } = res;
+const argv = {
+    tool: res.tool,
+    i: !(u && !i),
+    u: !(i && !u),
+    dry: res.d === true,
+};
 
 const isTypes = (dep) => /^@types\//.test(dep);
 // * `ora` <=> `@types/ora`
@@ -72,12 +81,19 @@ const dep2type = (name) => {
     }
 };
 
+const patch = {
+    webpack: ['webpack-env'],
+};
+
 const parsePkgTypes = (pkgJson) => {
     const { dependencies: deps = {}, devDependencies: devDeps = {} } = pkgJson;
     const sorter = (a, b) => (a < b ? -1 : 1);
     // * ----------------
     // * manually add `node` for `@types/node`
     const allDepPkgs = ['node', ...Object.keys(deps), ...Object.keys(devDeps)];
+    allDepPkgs
+        .filter((e) => patch[e])
+        .forEach((e) => allDepPkgs.push(...patch[e]));
     const allCandidateTypes = allDepPkgs
         .filter((name) => !isTypes(name))
         .map(dep2type);
@@ -123,8 +139,8 @@ const fetchList = (list, cb) => __awaiter(void 0, void 0, void 0, function* () {
     return { deprecated, useful };
 });
 
+const b = (dep) => chalk.bold(dep);
 const logAnalyzedList = ({ deprecated, unused, useful }) => {
-    const b = (dep) => chalk.bold(dep);
     // * ---------------- log uninstall list
     deprecated
         .filter((e) => !unused.includes(e))
@@ -135,14 +151,9 @@ const logAnalyzedList = ({ deprecated, unused, useful }) => {
         console.log(chalk.red(figures.arrowLeft, `${b(dep)} is unused. Needs to uninstall`));
     });
     // * ---------------- log install list
-    if (useful.length) {
-        useful.forEach((dep) => {
-            console.log(chalk.green(figures.arrowRight, `${b(dep)} is missing. Waiting for install`));
-        });
-    }
-    else {
-        console.log(chalk.white(figures.squareSmallFilled, `Nothing new`));
-    }
+    useful.forEach((dep) => {
+        console.log(chalk.green(figures.arrowRight, `${b(dep)} is missing. Waiting for install`));
+    });
 };
 
 (() => __awaiter(void 0, void 0, void 0, function* () {
@@ -157,7 +168,7 @@ const logAnalyzedList = ({ deprecated, unused, useful }) => {
     const { installed, unused, missed } = parsePkgTypes(pkgData.packageJson);
     // * ---------------- fetching
     const globalRegistry = registryUrl();
-    console.log(`registry = "${globalRegistry}"`);
+    console.log(`registry: "${globalRegistry}"`);
     const spinner = ora('Fetching...').start();
     let count = 0;
     const fetchLen = installed.length + missed.length;
@@ -170,16 +181,40 @@ const logAnalyzedList = ({ deprecated, unused, useful }) => {
         fetchList(missed, updateSpinner),
     ]);
     spinner.stop();
-    // * ---------------- run uninstall and install
-    logAnalyzedList({ deprecated, unused, useful });
-    const { install, uninstall } = toolCommand;
-    const allUn = [...new Set([...deprecated, ...unused])].join(' ');
-    if (allUn.length) {
-        child_process.execSync(`${uninstall} ${allUn}`, { stdio: 'inherit' });
+    // * -------------------------------- run uninstall and install
+    const { i, u, dry } = argv;
+    const wouldDeprecated = u ? deprecated : [];
+    const wouldUnused = u ? unused : [];
+    const wouldUseful = i ? useful : [];
+    const doSomething = [...wouldDeprecated, ...wouldUnused, ...wouldUseful]
+        .length;
+    // * ---------------- log
+    if (doSomething) {
+        logAnalyzedList({
+            deprecated: wouldDeprecated,
+            unused: wouldUnused,
+            useful: wouldUseful,
+        });
     }
-    const allIn = useful.join(' ');
-    if (allIn.length) {
-        child_process.execSync(`${install} ${allIn}`, { stdio: 'inherit' });
+    else {
+        console.log(chalk.white(figures.squareSmallFilled, `Nothing to do`));
+    }
+    // * ---------------- run or not
+    if (!dry) {
+        const { install, uninstall } = tools[argv.tool];
+        const allUn = [...new Set([...deprecated, ...unused])].join(' ');
+        if (u && allUn.length) {
+            child_process.execSync(`${uninstall} ${allUn}`, { stdio: 'inherit' });
+        }
+        const allIn = useful.join(' ');
+        if (i && allIn.length) {
+            child_process.execSync(`${install} ${allIn}`, { stdio: 'inherit' });
+        }
+    }
+    else {
+        if (doSomething) {
+            console.log(chalk.white(figures.line, `Dry run, skipping npm`));
+        }
     }
     // * ---------------- completing
     const deltaTime = prettyMs(Date.now() - startTime, {
