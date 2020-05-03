@@ -1,4 +1,5 @@
 import { dep2type, isTypes } from './pkg-name-map';
+import { patch } from './patch';
 
 type PkgDepsObj = {
   dependencies?: Record<string, string>;
@@ -14,6 +15,10 @@ export const parsePkgTypes = (pkgJson: PkgDepsObj) => {
 
   // * manually add `node` for `@types/node`
   const allDepPkgs = ['node', ...Object.keys(deps), ...Object.keys(devDeps)];
+
+  allDepPkgs
+    .filter((e) => patch[e])
+    .forEach((e) => allDepPkgs.push(...patch[e]));
 
   const allCandidateTypes = allDepPkgs
     .filter((name) => !isTypes(name))
