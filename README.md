@@ -4,6 +4,8 @@ Install missing TypeScript definition packages with one click.
 
 > You can also read this README in [English](./README.md), [简体中文](./README.zh-hans.md)
 
+![type-done overview](https://raw.githubusercontent.com/seognil-lab/type-done/master/screenshots/type-done-overview.png)
+
 ---
 
 This tool analyze the `package.json` file of your project, install missing TypeScript definition packages and uninstall useless ones for you.

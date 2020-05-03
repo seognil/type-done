@@ -4,6 +4,8 @@
 
 > 你也可以去看其他语言的 README：[English](./README.md), [简体中文](./README.zh-hans.md)
 
+![type-done overview](https://raw.githubusercontent.com/seognil-lab/type-done/master/screenshots/type-done-overview.png)
+
 ---
 
 本工具解析你项目中的 `package.json` 文件，为你安装缺失的类型声明库，并删除无用的声明库。
