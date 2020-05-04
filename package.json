@@ -21,6 +21,17 @@
     "index.js",
     "readme*"
   ],
+  "keywords": [
+    "ts",
+    "typescript",
+    "type",
+    "types",
+    "typing",
+    "typings",
+    "definitelytyped",
+    "installer",
+    "tool"
+  ],
   "devDependencies": {
     "@rollup/plugin-typescript": "^4.1.1",
     "@types/args": "^3.0.0",
