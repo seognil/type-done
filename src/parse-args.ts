@@ -24,7 +24,11 @@ args.option('tool', 'Which manager to use', defaultTool);
 args.option('install-only', 'Skip uninstall step');
 args.option('uninstall-only', 'Skip install step');
 args.option('dry-run', 'Only do analyze, skip run npm');
-args.option('concurrent', 'fetch concurrency limitation', defaultConcurrency);
+args.option(
+  'concurrent',
+  'Set fetch concurrency limitation',
+  defaultConcurrency,
+);
 
 const res = args.parse(process.argv, {
   name: 'type-done',
