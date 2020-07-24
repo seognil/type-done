@@ -67,12 +67,13 @@ You can also add it to the `scripts` field in your project's `package.json`, to 
 
 ### Option
 
-| Option                         | Description                                                     |
-| ------------------------------ | --------------------------------------------------------------- |
-| `-t [value]`, `--tool [value]` | Use specific package manager (default try yarn first, then npm) |
-| `-d`, `--dry-run`              | Dry run, just do anaylze, skip npm steps                        |
-| `-i`, `--install`              | Install missing packages, skip uninstall step                   |
-| `-u`, `--uninstall`            | Uninstall useless packages, skip install step                   |
+| Option                   | Description                                                        |
+| ------------------------ | ------------------------------------------------------------------ |
+| `-t`, `--tool [value]`   | Use specific package manager (defaults try `yarn`, fallback `npm`) |
+| `-c`, `--concurrent <n>` | Set fetch concurrency limitation (defaults to 10)                  |
+| `-d`, `--dry-run`        | Dry run, just do anaylze, skip npm steps                           |
+| `-i`, `--install-only`   | Install missing packages, skip uninstall step                      |
+| `-u`, `--uninstall-only` | Uninstall useless packages, skip install step                      |
 
 ## Contributing
 

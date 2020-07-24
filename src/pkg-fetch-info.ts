@@ -1,8 +1,12 @@
 import fetch from 'node-fetch';
 import registryUrl from 'registry-url';
+import pLimit from 'p-limit';
+import { argv } from './parse-args';
 
 // * default is: https://registry.npmjs.org/
 const globalRegistry = registryUrl();
+
+const limit = pLimit(argv.c);
 
 // * ----------------
 
@@ -22,7 +26,7 @@ export const fetchSingle = async (
 
   const latestVer = res?.['dist-tags']?.latest;
   const deprecated = res?.versions?.[latestVer]?.deprecated !== undefined;
-  const useful = res?.versions !== undefined && !deprecated;
+  const useful = latestVer !== undefined && !deprecated;
 
   cb?.(name);
   return { name, useful, deprecated };
@@ -37,7 +41,9 @@ export const fetchList = async (
   deprecated: string[];
   useful: string[];
 }> => {
-  const results = await Promise.all(list.map((name) => fetchSingle(name, cb)));
+  const results = await Promise.all(
+    list.map((name) => limit(() => fetchSingle(name, cb))),
+  );
   const deprecated = results.filter((e) => e.deprecated).map((e) => e.name);
   const useful = results.filter((e) => e.useful).map((e) => e.name);
 

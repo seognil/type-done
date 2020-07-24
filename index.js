@@ -13,20 +13,21 @@ var registryUrl = _interopDefault(require('registry-url'));
 var args = _interopDefault(require('args'));
 var commandExists = _interopDefault(require('command-exists'));
 var fetch = _interopDefault(require('node-fetch'));
+var pLimit = _interopDefault(require('p-limit'));
 
 /*! *****************************************************************************
-Copyright (c) Microsoft Corporation. All rights reserved.
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-this file except in compliance with the License. You may obtain a copy of the
-License at http://www.apache.org/licenses/LICENSE-2.0
+Copyright (c) Microsoft Corporation.
 
-THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-MERCHANTABLITY OR NON-INFRINGEMENT.
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
 
-See the Apache Version 2.0 License for specific language governing permissions
-and limitations under the License.
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
 ***************************************************************************** */
 
 function __awaiter(thisArg, _arguments, P, generator) {
@@ -45,6 +46,7 @@ const tools = {
     npm: { install: `npm install -D`, uninstall: `npm uninstall` },
 };
 const defaultTool = Object.keys(tools).find((tool) => commandExists.sync(tool));
+const defaultConcurrency = 10;
 if (defaultTool === undefined) {
     console.error("Couldn't find a supported package manager tool");
     console.error('Have you installed Node.js?');
@@ -55,6 +57,7 @@ args.option('tool', 'Which manager to use', defaultTool);
 args.option('install-only', 'Skip uninstall step');
 args.option('uninstall-only', 'Skip install step');
 args.option('dry-run', 'Only do analyze, skip run npm');
+args.option('concurrent', 'Set fetch concurrency limitation', defaultConcurrency);
 const res = args.parse(process.argv, {
     name: 'type-done',
     mri: {},
@@ -67,6 +70,7 @@ const argv = {
     i: !(u && !i),
     u: !(i && !u),
     dry: res.d === true,
+    c: res.c,
 };
 
 const isTypes = (dep) => /^@types\//.test(dep);
@@ -118,6 +122,7 @@ const parsePkgTypes = (pkgJson) => {
 
 // * default is: https://registry.npmjs.org/
 const globalRegistry = registryUrl();
+const limit = pLimit(argv.c);
 // * ----------------
 const fetchSingle = (name, cb) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
@@ -127,13 +132,13 @@ const fetchSingle = (name, cb) => __awaiter(void 0, void 0, void 0, function* ()
         .catch(() => ({ error: 'Not found' }));
     const latestVer = (_a = res === null || res === void 0 ? void 0 : res['dist-tags']) === null || _a === void 0 ? void 0 : _a.latest;
     const deprecated = ((_c = (_b = res === null || res === void 0 ? void 0 : res.versions) === null || _b === void 0 ? void 0 : _b[latestVer]) === null || _c === void 0 ? void 0 : _c.deprecated) !== undefined;
-    const useful = (res === null || res === void 0 ? void 0 : res.versions) !== undefined && !deprecated;
+    const useful = latestVer !== undefined && !deprecated;
     cb === null || cb === void 0 ? void 0 : cb(name);
     return { name, useful, deprecated };
 });
 // * ----------------
 const fetchList = (list, cb) => __awaiter(void 0, void 0, void 0, function* () {
-    const results = yield Promise.all(list.map((name) => fetchSingle(name, cb)));
+    const results = yield Promise.all(list.map((name) => limit(() => fetchSingle(name, cb))));
     const deprecated = results.filter((e) => e.deprecated).map((e) => e.name);
     const useful = results.filter((e) => e.useful).map((e) => e.name);
     return { deprecated, useful };
