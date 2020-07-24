@@ -10,6 +10,8 @@ export const tools = {
 };
 
 const defaultTool = Object.keys(tools).find((tool) => commandExists.sync(tool));
+const defaultConcurrency = 10;
+
 if (defaultTool === undefined) {
   console.error("Couldn't find a supported package manager tool");
   console.error('Have you installed Node.js?');
@@ -22,6 +24,7 @@ args.option('tool', 'Which manager to use', defaultTool);
 args.option('install-only', 'Skip uninstall step');
 args.option('uninstall-only', 'Skip install step');
 args.option('dry-run', 'Only do analyze, skip run npm');
+args.option('concurrent', 'fetch concurrency limitation', defaultConcurrency);
 
 const res = args.parse(process.argv, {
   name: 'type-done',
@@ -33,6 +36,7 @@ const res = args.parse(process.argv, {
   i?: true;
   u?: true;
   d?: true;
+  c: number;
 };
 
 const { i, u } = res;
@@ -42,4 +46,5 @@ export const argv = {
   i: !(u && !i),
   u: !(i && !u),
   dry: res.d === true,
+  c: res.c,
 };
