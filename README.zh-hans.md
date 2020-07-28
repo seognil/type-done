@@ -1,5 +1,12 @@
 # Type Done
 
+[![npm][npm]][npm-url] [![node][node]][node-url]
+
+[npm]: https://img.shields.io/npm/v/type-done
+[npm-url]: https://npmjs.com/package/type-done
+[node]: https://img.shields.io/node/v/type-done
+[node-url]: https://nodejs.org
+
 一键安装缺失的 TypeScript 类型声明库。
 
 > 你也可以去看其他语言的 README：[English](./README.md), [简体中文](./README.zh-hans.md)

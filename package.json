@@ -17,6 +17,9 @@
     "test": "jest",
     "build": "rollup -c"
   },
+  "engines": {
+    "node": ">=10"
+  },
   "files": [
     "index.js",
     "readme*"
