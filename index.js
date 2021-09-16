@@ -1,34 +1,17 @@
 #!/usr/bin/env node
-'use strict';
-
-var chalk = require('chalk');
-var child_process = require('child_process');
-var commandExists = require('command-exists');
-var figures = require('figures');
-var jsonfile = require('jsonfile');
-var pkgUp = require('pkg-up');
-var prettyMs = require('pretty-ms');
-var ora = require('ora');
-var registryUrl = require('registry-url');
-var fetch = require('node-fetch');
-var pLimit = require('p-limit');
-var yargs = require('yargs');
-var sortKeys = require('sort-keys');
-
-function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
-
-var chalk__default = /*#__PURE__*/_interopDefaultLegacy(chalk);
-var commandExists__default = /*#__PURE__*/_interopDefaultLegacy(commandExists);
-var figures__default = /*#__PURE__*/_interopDefaultLegacy(figures);
-var jsonfile__default = /*#__PURE__*/_interopDefaultLegacy(jsonfile);
-var pkgUp__default = /*#__PURE__*/_interopDefaultLegacy(pkgUp);
-var prettyMs__default = /*#__PURE__*/_interopDefaultLegacy(prettyMs);
-var ora__default = /*#__PURE__*/_interopDefaultLegacy(ora);
-var registryUrl__default = /*#__PURE__*/_interopDefaultLegacy(registryUrl);
-var fetch__default = /*#__PURE__*/_interopDefaultLegacy(fetch);
-var pLimit__default = /*#__PURE__*/_interopDefaultLegacy(pLimit);
-var yargs__default = /*#__PURE__*/_interopDefaultLegacy(yargs);
-var sortKeys__default = /*#__PURE__*/_interopDefaultLegacy(sortKeys);
+import chalk from 'chalk';
+import { execSync } from 'child_process';
+import commandExists from 'command-exists';
+import figures from 'figures';
+import jsonfile from 'jsonfile';
+import pkgUp from 'pkg-up';
+import prettyMs from 'pretty-ms';
+import ora from 'ora';
+import registryUrl from 'registry-url';
+import fetch from 'node-fetch';
+import pLimit from 'p-limit';
+import yargs from 'yargs';
+import sortKeys from 'sort-keys';
 
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -101,10 +84,10 @@ const checkPkgDeps = (pkgJson) => {
 var _a;
 // * ----------------------------------------------------------------
 const NPM_MANAGER_LIST = ['yarn', 'tnpm', 'pnpm', 'npm'];
-const DEFAULT_MANAGER = (_a = NPM_MANAGER_LIST.find((tool) => commandExists__default['default'].sync(tool))) !== null && _a !== void 0 ? _a : 'npm';
+const DEFAULT_MANAGER = (_a = NPM_MANAGER_LIST.find((tool) => commandExists.sync(tool))) !== null && _a !== void 0 ? _a : 'npm';
 const DEFAULT_PARALLEL = 10;
 // * ----------------------------------------------------------------
-const argv = yargs__default['default']
+const argv = yargs(process.argv.slice(2))
     .options({
     'tool': {
         alias: 't',
@@ -146,16 +129,16 @@ const argv = yargs__default['default']
         type: 'number',
     },
 })
-    .parseSync(process.argv.slice(2));
+    .parseSync();
 
 // * default is: https://registry.npmjs.org/
-const globalRegistry = registryUrl__default['default']();
-const limit = pLimit__default['default'](argv.parallel);
+const globalRegistry = registryUrl();
+const limit = pLimit(argv.parallel);
 // * ----------------
 const fetchSingle = (pkgName, tick) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
     const url = `${globalRegistry}/${pkgName}`.replace(/(?<!:)\/\//, '/');
-    const res = (yield fetch__default['default'](url)
+    const res = (yield fetch(url)
         .then((e) => e.json())
         .catch(() => {
         'Not found';
@@ -176,13 +159,13 @@ const fetchList = (depslist, tick) => __awaiter(void 0, void 0, void 0, function
 });
 
 const fetchDepsInfo = ({ installedTypes, missedTypes, }) => __awaiter(void 0, void 0, void 0, function* () {
-    const globalRegistry = registryUrl__default['default']();
+    const globalRegistry = registryUrl();
     console.log(`registry: "${globalRegistry}"`);
-    const spinner = ora__default['default']('Fetching...').start();
+    const spinner = ora('Fetching...').start();
     let count = 0;
     const fetchLen = installedTypes.length + missedTypes.length;
     const updateSpinner = (depName) => {
-        spinner.prefixText = chalk__default['default'].gray(`[${++count}/${fetchLen}]`);
+        spinner.prefixText = chalk.gray(`[${++count}/${fetchLen}]`);
         spinner.text = `Checking ${depName} ...`;
     };
     const [{ deprecatedTypes }, { usefulTypes }] = yield Promise.all([
@@ -193,7 +176,7 @@ const fetchDepsInfo = ({ installedTypes, missedTypes, }) => __awaiter(void 0, vo
     return { deprecatedTypes, usefulTypes };
 });
 
-const b = (dep) => chalk__default['default'].bold(dep);
+const b = (dep) => chalk.bold(dep);
 const logAnalyzedList = ({ deprecatedTypes, unusedTypes, usefulTypes, }) => {
     const deprecatedNames = deprecatedTypes.map((e) => e.pkgName);
     const unusedNames = unusedTypes;
@@ -202,14 +185,14 @@ const logAnalyzedList = ({ deprecatedTypes, unusedTypes, usefulTypes, }) => {
     deprecatedNames
         .filter((e) => !unusedNames.includes(e))
         .forEach((dep) => {
-        console.log(chalk__default['default'].red(figures__default['default'].arrowLeft, `${b(dep)} is deprecated. Needs to uninstall`));
+        console.log(chalk.red(figures.arrowLeft, `${b(dep)} is deprecated. Needs to uninstall`));
     });
     unusedNames.forEach((dep) => {
-        console.log(chalk__default['default'].red(figures__default['default'].arrowLeft, `${b(dep)} is unused. Needs to uninstall`));
+        console.log(chalk.red(figures.arrowLeft, `${b(dep)} is unused. Needs to uninstall`));
     });
     // * ---------------- log install list
     usefulNames.forEach((dep) => {
-        console.log(chalk__default['default'].green(figures__default['default'].arrowRight, `${b(dep)} is missing. Waiting for install`));
+        console.log(chalk.green(figures.arrowRight, `${b(dep)} is missing. Waiting for install`));
     });
 };
 
@@ -236,21 +219,21 @@ const updatePackageJson = (pkgPath, pkgJson, { deprecatedTypes, unusedTypes, use
                 delete pkgJson.dependencies[e];
             }
         });
-        pkgJson.dependencies = sortKeys__default['default'](pkgJson.dependencies);
-        pkgJson.devDependencies = sortKeys__default['default'](pkgJson.devDependencies);
+        pkgJson.dependencies = sortKeys(pkgJson.dependencies);
+        pkgJson.devDependencies = sortKeys(pkgJson.devDependencies);
     }
-    yield jsonfile__default['default'].writeFile(pkgPath, pkgJson, { spaces: 2 });
+    yield jsonfile.writeFile(pkgPath, pkgJson, { spaces: 2 });
 });
 
 // * ================================================================================
 const task = () => __awaiter(void 0, void 0, void 0, function* () {
     // * ---------------- check if package.json exists
-    const pkgPath = yield pkgUp__default['default']();
+    const pkgPath = yield pkgUp();
     if (pkgPath === null) {
         console.error('No package.json file found!');
         process.exit();
     }
-    const pkgJson = yield jsonfile__default['default'].readFile(pkgPath);
+    const pkgJson = yield jsonfile.readFile(pkgPath);
     // * ---------------- static package analyzing
     const { installedTypes, unusedTypes, missedTypes } = checkPkgDeps(pkgJson);
     // * ---------------- fetching info
@@ -261,7 +244,7 @@ const task = () => __awaiter(void 0, void 0, void 0, function* () {
     // ! ---------------- all clear early quit
     const allClear = !deprecatedTypes.length && !unusedTypes.length && !missedTypes.length;
     if (allClear)
-        return console.log(chalk__default['default'].white(figures__default['default'].squareSmallFilled, `Nothing to do`));
+        return console.log(chalk.white(figures.squareSmallFilled, `Nothing to do`));
     // * ---------------- log result
     const patchBundle = {
         deprecatedTypes,
@@ -278,19 +261,19 @@ const task = () => __awaiter(void 0, void 0, void 0, function* () {
     if (argv['skip-install'])
         return;
     const tool = argv.tool;
-    if (!commandExists__default['default'].sync(tool)) {
+    if (!commandExists.sync(tool)) {
         console.error(`Command '${tool}' not found!`);
         process.exit();
     }
-    child_process.execSync(`${tool} install`, { stdio: 'inherit' });
+    execSync(`${tool} install`, { stdio: 'inherit' });
 });
 // * ================================================================================
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const startTime = Date.now();
     yield task();
-    const deltaTime = prettyMs__default['default'](Date.now() - startTime, {
+    const deltaTime = prettyMs(Date.now() - startTime, {
         secondsDecimalDigits: 2,
     });
-    console.log(chalk__default['default'].green(figures__default['default'].tick, `All types are OK. Done in ${deltaTime}`));
+    console.log(chalk.green(figures.tick, `All types are OK. Done in ${deltaTime}`));
 });
 main();

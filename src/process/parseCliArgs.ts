@@ -12,7 +12,7 @@ const DEFAULT_PARALLEL = 10;
 
 // * ----------------------------------------------------------------
 
-export const argv = yargs
+export const argv = yargs(process.argv.slice(2))
   .options({
     'tool': {
       alias: 't',
@@ -54,4 +54,4 @@ export const argv = yargs
       type: 'number',
     },
   })
-  .parseSync(process.argv.slice(2));
+  .parseSync();
