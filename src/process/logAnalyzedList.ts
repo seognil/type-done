@@ -1,19 +1,22 @@
 import chalk from 'chalk';
 import figures from 'figures';
-
-type Logger = (arg: {
-  deprecated: string[];
-  unused: string[];
-  useful: string[];
-}) => void;
+import { PatchBundle } from './types';
 
 const b = (dep: string) => chalk.bold(dep);
 
-export const logAnalyzedList: Logger = ({ deprecated, unused, useful }) => {
+export const logAnalyzedList = ({
+  deprecatedTypes,
+  unusedTypes,
+  usefulTypes,
+}: PatchBundle) => {
+  const deprecatedNames = deprecatedTypes.map((e) => e.pkgName);
+  const unusedNames = unusedTypes;
+  const usefulNames = usefulTypes.map((e) => e.pkgName);
+
   // * ---------------- log uninstall list
 
-  deprecated
-    .filter((e) => !unused.includes(e))
+  deprecatedNames
+    .filter((e) => !unusedNames.includes(e))
     .forEach((dep) => {
       console.log(
         chalk.red(
@@ -23,7 +26,7 @@ export const logAnalyzedList: Logger = ({ deprecated, unused, useful }) => {
       );
     });
 
-  unused.forEach((dep) => {
+  unusedNames.forEach((dep) => {
     console.log(
       chalk.red(figures.arrowLeft, `${b(dep)} is unused. Needs to uninstall`),
     );
@@ -31,7 +34,7 @@ export const logAnalyzedList: Logger = ({ deprecated, unused, useful }) => {
 
   // * ---------------- log install list
 
-  useful.forEach((dep) => {
+  usefulNames.forEach((dep) => {
     console.log(
       chalk.green(
         figures.arrowRight,

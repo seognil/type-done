@@ -3,7 +3,7 @@ export const isTypes = (dep: string) => /^@types\//.test(dep);
 // * `ora` <=> `@types/ora`
 // * `@babel/core` <=> `@types/babel__core`
 
-export const dep2type = (name: string): string => {
+export const depName2typeName = (name: string): string => {
   if (/@.+\/.*/.test(name)) {
     return `@types/` + name.replace('@', '').replace('/', '__');
   } else {
@@ -11,7 +11,7 @@ export const dep2type = (name: string): string => {
   }
 };
 
-export const type2dep = (name: string): string => {
+export const typeName2depName = (name: string): string => {
   if (/@types\/.+__.+/.test(name)) {
     return '@' + name.replace(`@types/`, '').split('__').join('/');
   } else {
