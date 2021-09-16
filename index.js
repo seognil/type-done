@@ -278,7 +278,7 @@ const task = () => __awaiter(void 0, void 0, void 0, function* () {
     if (argv['skip-install'])
         return;
     const tool = argv.tool;
-    if (commandExists__default['default'].sync(tool)) {
+    if (!commandExists__default['default'].sync(tool)) {
         console.error(`Command '${tool}' not found!`);
         process.exit();
     }

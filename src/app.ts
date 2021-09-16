@@ -70,7 +70,7 @@ const task = async () => {
 
   const tool = argv.tool;
 
-  if (commandExists.sync(tool)) {
+  if (!commandExists.sync(tool)) {
     console.error(`Command '${tool}' not found!`);
     process.exit();
   }
