@@ -45,42 +45,23 @@ Global install:
 - `npm -g i type-done`
 - `yarn global add type-done`
 
-Or as a dev dependancy:
-
-- `npm install -D type-done`
-- `yarn add -D type-done`
-
 ## Usage
 
 While at your node project folder, run `type-done` through terminal
 
-if global installed:
-
 `type-done [options]`
-
-if as dev dependancy:
-
-`npx type-done [options]`
-
-You can also add it to the `scripts` field in your project's `package.json`, to make it install types automatically when every time you install a normal dependency.
-
-```json
-{
-  "scripts": {
-    "postinstall": "type-done"
-  }
-}
-```
 
 ### Option
 
-| Option                   | Description                                                        |
-| ------------------------ | ------------------------------------------------------------------ |
-| `-t`, `--tool [value]`   | Use specific package manager (defaults try `yarn`, fallback `npm`) |
-| `-c`, `--concurrent <n>` | Set fetch concurrency limitation (defaults to 10)                  |
-| `-d`, `--dry-run`        | Dry run, just do anaylze, skip npm steps                           |
-| `-i`, `--install-only`   | Install missing packages, skip uninstall step                      |
-| `-u`, `--uninstall-only` | Uninstall useless packages, skip install step                      |
+| Option                 | Description                                                       |
+| ---------------------- | ----------------------------------------------------------------- |
+| `-t`, `--tool [value]` | Use specific package manager (try `yarn`, `pnpm`, `npm` in order) |
+| `--skip-add`           | Skip add missing @types                                           |
+| `--skip-remove`        | Skip removing unuseful @types                                     |
+| `--skip-sort`          | Skip sorting dependencies in package.json                         |
+| `-s`, `--skip-install` | Skip run install after analyzed                                   |
+| `-d`, `--dry-run`      | Analyze only                                                      |
+| `-p`, `--parallel <n>` | Set maximum number of parallel fetch tasks (defaults to 10)       |
 
 ## Contributing
 

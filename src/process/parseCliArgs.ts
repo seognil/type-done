@@ -21,12 +21,12 @@ export const argv = yargs(process.argv.slice(2))
       type: 'string',
     },
     'skip-add': {
-      describe: 'Skip checking missing deps',
+      describe: 'Skip add missing @types',
       default: false,
       type: 'boolean',
     },
     'skip-remove': {
-      describe: 'Skip checking unuseful deps',
+      describe: 'Skip removing unuseful @types',
       default: false,
       type: 'boolean',
     },
@@ -37,7 +37,7 @@ export const argv = yargs(process.argv.slice(2))
     },
     'skip-install': {
       alias: 's',
-      describe: 'Skip npm install',
+      describe: 'Skip run install after analyzed',
       default: false,
       type: 'boolean',
     },
