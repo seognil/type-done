@@ -28,7 +28,7 @@ type-done 支持的特性：
 - 删除废弃的类型声明库（比如刚才提到的 `@types/moment`）
 - 删除未使用的类型声明库
 - 通过读取 `npm config` 解析你当前设置的仓库源（比如国内用户可能用的是 `https://registry.npm.taobao.org/` 而不是 `https://registry.npmjs.org/`）
-- 并行搜索，提升网络性能
+- 并发搜索，提高性能
 - 顺便检查 `@types/node`
 - 支持 `yarn` 或 `npm` 进行处理
 
@@ -45,42 +45,23 @@ type-done 支持的特性：
 - `npm -g i type-done`
 - `yarn global add type-done`
 
-或作为依赖安装：
-
-- `npm install -D type-done`
-- `yarn add -D type-done`
-
 ## 使用
 
 进入你的 Node 项目文件夹中，然后在终端运行 `type-done` 命令
 
-如果是通过全局安装的：
-
 `type-done [options]`
-
-如果是作为依赖安装的：
-
-`npx type-done [options]`
-
-也可以加入到 `package.json` 的 `scripts` 字段中，通过钩子实现自动安装。
-
-```json
-{
-  "scripts": {
-    "postinstall": "type-done"
-  }
-}
-```
 
 ### 选项
 
-| 选项                     | 描述                                     |
-| ------------------------ | ---------------------------------------- |
-| `-t`, `--tool [value]`   | 指定包管理器 (默认按顺序尝试 yarn , npm) |
-| `-c`, `--concurrent <n>` | 调整请求 npm 仓库的并发数量 (默认为 10)  |
-| `-d`, `--dry-run`        | 空运行，只进行分析，不进行安装或卸载     |
-| `-i`, `--install-only`   | 只进行安装，不进行卸载                   |
-| `-u`, `--uninstall-only` | 只进行卸载，不进行安装                   |
+| 选项                   | 描述                                          |
+| ---------------------- | --------------------------------------------- |
+| `-t`, `--tool [value]` | 指定包管理器 (默认按顺序尝试 yarn, pnpm, npm) |
+| `--skip-add`           | 跳过往 package.json 新增 @types               |
+| `--skip-remove`        | 跳过往 package.json 移除 @types               |
+| `--skip-sort`          | 跳过对 package.json 的依赖进行排序            |
+| `-s`, `--skip-install` | 跳过 install                                  |
+| `-d`, `--dry-run`      | 只进行分析，不做其他动作                      |
+| `-p`, `--parallel <n>` | 调整请求 npm 仓库的并发数量 (默认为 10)       |
 
 ## 贡献
 

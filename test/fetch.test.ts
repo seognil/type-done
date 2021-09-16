@@ -1,42 +1,44 @@
-import { parsePkgTypes } from './../src/pkg-json-analyze';
-import { fetchList, fetchSingle } from '../src/pkg-fetch-info';
+import { fetchList, fetchSingle } from '../src/process/fetchUtils';
+import { checkPkgDeps } from './../src/process/checkPkgDepsByJson';
 import { pkgObjCase } from './data-case';
 
 describe('test fetch single', () => {
   test('deprecated', async () => {
     const result = await fetchSingle('@types/ora');
-    expect(result).toMatchObject({ useful: false, deprecated: true });
+    expect(result).toMatchObject({ isUseful: false, isDeprecated: true });
   });
 
   test('latest not deprecated', async () => {
     const result = await fetchSingle('@types/uuid');
-    expect(result).toMatchObject({ useful: true, deprecated: false });
+    expect(result).toMatchObject({ isUseful: true, isDeprecated: false });
   });
 
   test('useful', async () => {
     const result = await fetchSingle('lodash');
-    expect(result).toMatchObject({ useful: true, deprecated: false });
+    expect(result).toMatchObject({ isUseful: true, isDeprecated: false });
   });
 
   test('not found', async () => {
     const result = await fetchSingle('rocket-jump-sky-high!');
-    expect(result).toMatchObject({ useful: false, deprecated: false });
+    expect(result).toMatchObject({ isUseful: false, isDeprecated: false });
   });
 });
 
-jest.setTimeout(30000);
-
 describe('test fetch list', () => {
-  const { installed, missed } = parsePkgTypes(pkgObjCase);
+  const { installedTypes, missedTypes } = checkPkgDeps(pkgObjCase);
 
   test('check deprecated', async () => {
-    const result = await fetchList(installed);
-    expect(result.deprecated).toEqual(['@types/chalk', '@types/ora']);
+    const result = await fetchList(installedTypes);
+    expect(result.deprecatedTypes.map((e) => e.pkgName)).toEqual([
+      '@types/chalk',
+      '@types/ora',
+      '@types/terser-webpack-plugin',
+    ]);
   });
 
   test('check missing', async () => {
-    const result = await fetchList(missed);
-    expect(result.useful).toEqual([
+    const result = await fetchList(missedTypes);
+    expect(result.usefulTypes.map((e) => e.pkgName)).toEqual([
       '@types/args',
       '@types/babel__core',
       '@types/jest',

@@ -1,99 +1,89 @@
 #!/usr/bin/env node
 
-import { execSync } from 'child_process';
 import chalk from 'chalk';
+import { execSync } from 'child_process';
+import commandExists from 'command-exists';
 import figures from 'figures';
-import ora from 'ora';
+import jsonfile from 'jsonfile';
+import pkgUp from 'pkg-up';
 import prettyMs from 'pretty-ms';
-import readPkgUp from 'read-pkg-up';
-import registryUrl from 'registry-url';
+import { checkPkgDeps } from './process/checkPkgDepsByJson';
+import { fetchDepsInfo } from './process/fetchDepsInfo';
+import { logAnalyzedList } from './process/logAnalyzedList';
+import { argv } from './process/parseCliArgs';
+import { PatchBundle } from './process/types';
+import { updatePackageJson } from './process/updatePackageJson';
 
-import { argv, tools } from './parse-args';
-import { parsePkgTypes } from './pkg-json-analyze';
-import { fetchList } from './pkg-fetch-info';
-import { logAnalyzedList } from './end-log';
+// * ================================================================================
 
-(async () => {
-  const startTime = Date.now();
-
+const task = async () => {
   // * ---------------- check if package.json exists
 
-  const pkgData = await readPkgUp();
+  const pkgPath = await pkgUp();
 
-  if (pkgData === undefined) {
+  if (pkgPath === null) {
     console.error('No package.json file found!');
     process.exit();
   }
 
+  const pkgJson = await jsonfile.readFile(pkgPath);
+
   // * ---------------- static package analyzing
 
-  const { installed, unused, missed } = parsePkgTypes(pkgData.packageJson);
+  const { installedTypes, unusedTypes, missedTypes } = checkPkgDeps(pkgJson);
 
-  // * ---------------- fetching
+  // * ---------------- fetching info
 
-  const globalRegistry = registryUrl();
-  console.log(`registry: "${globalRegistry}"`);
+  const { deprecatedTypes, usefulTypes } = await fetchDepsInfo({
+    installedTypes,
+    missedTypes,
+  });
 
-  const spinner = ora('Fetching...').start();
+  // ! ---------------- all clear early quit
 
-  let count = 0;
-  const fetchLen = installed.length + missed.length;
-  const updateSpinner = (name: string) => {
-    spinner.prefixText = chalk.gray(`[${++count}/${fetchLen}]`);
-    spinner.text = `Checking ${name} ...`;
+  const allClear =
+    !deprecatedTypes.length && !unusedTypes.length && !missedTypes.length;
+  if (allClear)
+    return console.log(chalk.white(figures.squareSmallFilled, `Nothing to do`));
+
+  // * ---------------- log result
+
+  const patchBundle: PatchBundle = {
+    deprecatedTypes,
+    unusedTypes,
+    usefulTypes,
   };
 
-  const [{ deprecated }, { useful }] = await Promise.all([
-    fetchList(installed, updateSpinner),
-    fetchList(missed, updateSpinner),
-  ]);
+  logAnalyzedList(patchBundle);
 
-  spinner.stop();
+  // ! ---------------- dry run early quit
 
-  // * -------------------------------- run uninstall and install
+  if (argv['dry-run']) return;
 
-  const { i, u, dry } = argv;
+  // * ---------------- update package.json
 
-  const wouldDeprecated = u ? deprecated : [];
-  const wouldUnused = u ? unused : [];
-  const wouldUseful = i ? useful : [];
+  await updatePackageJson(pkgPath, pkgJson, patchBundle);
 
-  const doSomething = [...wouldDeprecated, ...wouldUnused, ...wouldUseful]
-    .length;
+  // * ---------------- install
 
-  // * ---------------- log
+  if (argv['skip-install']) return;
 
-  if (doSomething) {
-    logAnalyzedList({
-      deprecated: wouldDeprecated,
-      unused: wouldUnused,
-      useful: wouldUseful,
-    });
-  } else {
-    console.log(chalk.white(figures.squareSmallFilled, `Nothing to do`));
+  const tool = argv.tool;
+
+  if (!commandExists.sync(tool)) {
+    console.error(`Command '${tool}' not found!`);
+    process.exit();
   }
 
-  // * ---------------- run or not
+  execSync(`${tool} install`, { stdio: 'inherit' });
+};
 
-  if (!dry) {
-    const { install, uninstall } = tools[argv.tool];
+// * ================================================================================
 
-    const allUn = [...new Set([...deprecated, ...unused])].join(' ');
-    if (u && allUn.length) {
-      execSync(`${uninstall} ${allUn}`, { stdio: 'inherit' });
-    }
+const main = async () => {
+  const startTime = Date.now();
 
-    const allIn = useful.join(' ');
-    if (i && allIn.length) {
-      execSync(`${install} ${allIn}`, { stdio: 'inherit' });
-    }
-  } else {
-    if (doSomething) {
-      console.log(chalk.white(figures.line, `Dry run, skipping npm`));
-    }
-  }
-
-  // * ---------------- completing
+  await task();
 
   const deltaTime = prettyMs(Date.now() - startTime, {
     secondsDecimalDigits: 2,
@@ -101,4 +91,6 @@ import { logAnalyzedList } from './end-log';
   console.log(
     chalk.green(figures.tick, `All types are OK. Done in ${deltaTime}`),
   );
-})();
+};
+
+main();

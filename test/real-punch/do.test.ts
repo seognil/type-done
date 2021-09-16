@@ -1,47 +1,42 @@
-import fs from 'fs';
-import path from 'path';
 import { execSync } from 'child_process';
-// import { argv } from '../../src/parse-args';
+import fs from 'fs';
+import jsonfile from 'jsonfile';
+import path from 'path';
 import rimraf from 'rimraf';
 
 // * ----------------------------------------------------------------
 
-const currentDir = path.resolve(__dirname);
-const nodeModules = path.resolve(currentDir, './node_modules');
+const testDirPath = path.resolve(__dirname);
+const testNodemodulesPath = path.resolve(testDirPath, './node_modules');
 
 const runTypeDone = (opts: string = '') => {
   // * clear node_modules
-  fs.existsSync(nodeModules) && rimraf.sync(nodeModules);
+  fs.existsSync(testNodemodulesPath) && rimraf.sync(testNodemodulesPath);
 
   // * prepare
-  execSync(`cd ${currentDir}; cp package.origin.json package.json;`);
+  execSync(`cd ${testDirPath}; cp package.origin.json package.json;`);
 
   // // * npm install
   // execSync(`cd ${currentDir}; ${argv.tool} install`, { stdio: 'inherit' });
 
   execSync(
-    `cd ${currentDir}; ../../node_modules/ts-node/dist/bin.js ../../src/app.ts ${opts}`,
-    {
-      stdio: 'inherit',
-    },
+    `cd ${testDirPath}; ../../node_modules/ts-node/dist/bin.js ../../src/app.ts ${opts}`,
+    { stdio: 'inherit' },
   );
 };
 
 // * ----------------------------------------------------------------
 
-const readPkg = (file: string) =>
-  JSON.parse(fs.readFileSync(path.resolve(currentDir, file), 'utf8'));
+const readPkg = (p: string) =>
+  jsonfile.readFileSync(path.resolve(testDirPath, p));
 
 const jsonOrigin = readPkg('./package.origin.json');
-const jsonExp = readPkg('./package.expect.json');
-const jsonInstall = readPkg('./package.install.json');
-const jsonUninstall = readPkg('./package.uninstall.json');
 
-const listDeps = (pkg: any, field: string) =>
-  Object.keys(pkg[field]).sort((a, b) => (a < b ? -1 : 1));
-
-const jsonShouldMatch = (jsonTarget: any) => {
+const jsonResultShouldMatch = (jsonTarget: any) => {
   const jsonResult = readPkg('./package.json');
+
+  const listDeps = (pkg: any, field: string) => Object.keys(pkg[field]);
+  // .sort((a, b) => (a < b ? -1 : 1));
 
   expect(listDeps(jsonResult, 'devDependencies')).toEqual(
     listDeps(jsonTarget, 'devDependencies'),
@@ -53,39 +48,51 @@ const jsonShouldMatch = (jsonTarget: any) => {
 
 // * ----------------------------------------------------------------
 
+jest.setTimeout(90000);
+
 describe('run test', () => {
   test('should run correctly', () => {
     runTypeDone();
-    jsonShouldMatch(jsonExp);
+    jsonResultShouldMatch(readPkg('./package.default-result.json'));
   });
 
   test('dry run', () => {
     runTypeDone('-d');
-    jsonShouldMatch(jsonOrigin);
+    jsonResultShouldMatch(jsonOrigin);
   });
 
-  test('install only', () => {
-    runTypeDone('-i');
-    jsonShouldMatch(jsonInstall);
+  test('skip add', () => {
+    runTypeDone('--skip-add');
+    jsonResultShouldMatch(readPkg('./package.skip-add.json'));
   });
 
-  test('uninstall only', () => {
-    runTypeDone('-u');
-    jsonShouldMatch(jsonUninstall);
+  test('skip uninstall', () => {
+    runTypeDone('--skip-remove');
+    jsonResultShouldMatch(readPkg('./package.skip-remove.json'));
   });
 
-  test('mix ud', () => {
-    runTypeDone('-ud');
-    jsonShouldMatch(jsonOrigin);
+  test('skip sort', () => {
+    runTypeDone('--skip-sort');
+    jsonResultShouldMatch(readPkg('./package.skip-sort.json'));
   });
 
-  test('mix id', () => {
-    runTypeDone('-id');
-    jsonShouldMatch(jsonOrigin);
+  test('mix dry 1', () => {
+    runTypeDone('-d --skip-add');
+    jsonResultShouldMatch(jsonOrigin);
   });
 
-  test('mix iu', () => {
-    runTypeDone('-iu');
-    jsonShouldMatch(jsonExp);
+  test('mix dry 2', () => {
+    runTypeDone('-d --skip-remove');
+    jsonResultShouldMatch(jsonOrigin);
+  });
+
+  test('mix dry 3', () => {
+    runTypeDone('-d --skip-sort --skip-add --skip-remove');
+    jsonResultShouldMatch(jsonOrigin);
+  });
+
+  test('skip everything', () => {
+    runTypeDone('--skip-sort --skip-add --skip-remove');
+    jsonResultShouldMatch(jsonOrigin);
   });
 });
