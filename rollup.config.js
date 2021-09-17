@@ -4,5 +4,5 @@ import hashbang from 'rollup-plugin-hashbang';
 export default {
   input: './src/app.ts',
   output: { file: './index.js', format: 'esm' },
-  plugins: [hashbang(), typescript({ module: 'ESNext', target: 'ES6' })],
+  plugins: [hashbang(), typescript()],
 };

@@ -20,7 +20,8 @@ const runTypeDone = (opts: string = '') => {
   // execSync(`cd ${currentDir}; ${argv.tool} install`, { stdio: 'inherit' });
 
   execSync(
-    `cd ${testDirPath}; ../../node_modules/ts-node/dist/bin.js ../../src/app.ts ${opts}`,
+    // `cd ${testDirPath}; ../../node_modules/ts-node/dist/bin.js ../../src/app.ts ${opts}`,
+    `cd ${testDirPath}; node ../../index.js ${opts}`,
     { stdio: 'inherit' },
   );
 };

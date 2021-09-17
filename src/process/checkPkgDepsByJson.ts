@@ -8,8 +8,8 @@ interface CheckResult {
   missedTypes: string[];
 }
 
-export const checkPkgDeps = (pkgJson: PkgJsonObj): CheckResult => {
-  const { dependencies: deps = {}, devDependencies: devDeps = {} } = pkgJson;
+export const checkPkgDeps = (json: PkgJsonObj): CheckResult => {
+  const { dependencies: deps = {}, devDependencies: devDeps = {} } = json;
 
   const sorter = (a: string, b: string) => (a < b ? -1 : 1);
 

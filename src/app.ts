@@ -4,30 +4,18 @@ import chalk from 'chalk';
 import { execSync } from 'child_process';
 import commandExists from 'command-exists';
 import figures from 'figures';
-import jsonfile from 'jsonfile';
-import pkgUp from 'pkg-up';
 import prettyMs from 'pretty-ms';
 import { checkPkgDeps } from './process/checkPkgDepsByJson';
 import { fetchDepsInfo } from './process/fetchDepsInfo';
 import { logAnalyzedList } from './process/logAnalyzedList';
 import { argv } from './process/parseCliArgs';
+import { pkgJson } from './process/readPkgJson';
 import { PatchBundle } from './process/types';
 import { updatePackageJson } from './process/updatePackageJson';
 
 // * ================================================================================
 
 const task = async () => {
-  // * ---------------- check if package.json exists
-
-  const pkgPath = await pkgUp();
-
-  if (pkgPath === null) {
-    console.error('No package.json file found!');
-    process.exit();
-  }
-
-  const pkgJson = await jsonfile.readFile(pkgPath);
-
   // * ---------------- static package analyzing
 
   const { installedTypes, unusedTypes, missedTypes } = checkPkgDeps(pkgJson);
@@ -62,7 +50,7 @@ const task = async () => {
 
   // * ---------------- update package.json
 
-  await updatePackageJson(pkgPath, pkgJson, patchBundle);
+  await updatePackageJson(patchBundle);
 
   // * ---------------- install
 

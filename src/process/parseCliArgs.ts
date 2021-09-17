@@ -1,5 +1,6 @@
 import commandExists from 'command-exists';
 import yargs from 'yargs';
+import { pkgVersion } from './readPkgJson';
 
 // * ----------------------------------------------------------------
 
@@ -13,6 +14,7 @@ const DEFAULT_PARALLEL = 10;
 // * ----------------------------------------------------------------
 
 export const argv = yargs(process.argv.slice(2))
+  .version(pkgVersion)
   .options({
     'tool': {
       alias: 't',

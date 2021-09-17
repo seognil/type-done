@@ -3,14 +3,14 @@ import chalk from 'chalk';
 import { execSync } from 'child_process';
 import commandExists from 'command-exists';
 import figures from 'figures';
-import jsonfile from 'jsonfile';
-import pkgUp from 'pkg-up';
 import prettyMs from 'pretty-ms';
 import ora from 'ora';
 import registryUrl from 'registry-url';
 import fetch from 'node-fetch';
 import pLimit from 'p-limit';
 import yargs from 'yargs';
+import jsonfile from 'jsonfile';
+import pkgUp from 'pkg-up';
 import sortKeys from 'sort-keys';
 
 /*! *****************************************************************************
@@ -54,8 +54,8 @@ const depName2typeName = (name) => {
     }
 };
 
-const checkPkgDeps = (pkgJson) => {
-    const { dependencies: deps = {}, devDependencies: devDeps = {} } = pkgJson;
+const checkPkgDeps = (json) => {
+    const { dependencies: deps = {}, devDependencies: devDeps = {} } = json;
     const sorter = (a, b) => (a < b ? -1 : 1);
     // * ----------------
     // * manually add `node` for `@types/node`
@@ -81,6 +81,18 @@ const checkPkgDeps = (pkgJson) => {
     return { installedTypes, missedTypes, unusedTypes };
 };
 
+const pkgPath = (() => {
+    const pkgPath = pkgUp.sync();
+    if (pkgPath === null) {
+        console.error('No package.json file found!');
+        process.exit();
+    }
+    return pkgPath;
+})();
+const pkgJson = jsonfile.readFileSync(pkgPath);
+// @ts-ignore
+const pkgVersion = pkgJson.version;
+
 var _a;
 // * ----------------------------------------------------------------
 const NPM_MANAGER_LIST = ['yarn', 'tnpm', 'pnpm', 'npm'];
@@ -88,6 +100,7 @@ const DEFAULT_MANAGER = (_a = NPM_MANAGER_LIST.find((tool) => commandExists.sync
 const DEFAULT_PARALLEL = 10;
 // * ----------------------------------------------------------------
 const argv = yargs(process.argv.slice(2))
+    .version(pkgVersion)
     .options({
     'tool': {
         alias: 't',
@@ -196,27 +209,34 @@ const logAnalyzedList = ({ deprecatedTypes, unusedTypes, usefulTypes, }) => {
     });
 };
 
-const updatePackageJson = (pkgPath, pkgJson, { deprecatedTypes, unusedTypes, usefulTypes }) => __awaiter(void 0, void 0, void 0, function* () {
+const updatePackageJson = ({ deprecatedTypes, unusedTypes, usefulTypes, }) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!pkgJson.dependencies)
+        pkgJson.dependencies = {};
+    if (!pkgJson.devDependencies)
+        pkgJson.devDependencies = {};
+    const dependencies = pkgJson.dependencies;
+    const devDependencies = pkgJson.devDependencies;
+    // * ----------------
     if (!argv['skip-add']) {
         usefulTypes.forEach((e) => {
-            pkgJson.devDependencies[e.pkgName] = `^${e.lastVer}`;
+            devDependencies[e.pkgName] = `^${e.lastVer}`;
         });
     }
     if (!argv['skip-remove']) {
         deprecatedTypes.forEach((e) => {
-            delete pkgJson.dependencies[e.pkgName];
-            delete pkgJson.devDependencies[e.pkgName];
+            delete dependencies[e.pkgName];
+            delete devDependencies[e.pkgName];
         });
         unusedTypes.forEach((e) => {
-            delete pkgJson.dependencies[e];
-            delete pkgJson.devDependencies[e];
+            delete dependencies[e];
+            delete devDependencies[e];
         });
     }
     if (!argv['skip-sort']) {
-        Object.keys(pkgJson.dependencies).forEach((e) => {
+        Object.keys(dependencies).forEach((e) => {
             if (isTypes(e)) {
-                pkgJson.devDependencies[e] = pkgJson.dependencies[e];
-                delete pkgJson.dependencies[e];
+                devDependencies[e] = dependencies[e];
+                delete dependencies[e];
             }
         });
         pkgJson.dependencies = sortKeys(pkgJson.dependencies);
@@ -227,13 +247,6 @@ const updatePackageJson = (pkgPath, pkgJson, { deprecatedTypes, unusedTypes, use
 
 // * ================================================================================
 const task = () => __awaiter(void 0, void 0, void 0, function* () {
-    // * ---------------- check if package.json exists
-    const pkgPath = yield pkgUp();
-    if (pkgPath === null) {
-        console.error('No package.json file found!');
-        process.exit();
-    }
-    const pkgJson = yield jsonfile.readFile(pkgPath);
     // * ---------------- static package analyzing
     const { installedTypes, unusedTypes, missedTypes } = checkPkgDeps(pkgJson);
     // * ---------------- fetching info
@@ -256,7 +269,7 @@ const task = () => __awaiter(void 0, void 0, void 0, function* () {
     if (argv['dry-run'])
         return;
     // * ---------------- update package.json
-    yield updatePackageJson(pkgPath, pkgJson, patchBundle);
+    yield updatePackageJson(patchBundle);
     // * ---------------- install
     if (argv['skip-install'])
         return;
