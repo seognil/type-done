@@ -1,6 +1,6 @@
 {
   "name": "type-done",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Install missing DefinitelyTyped packages in one click",
   "license": "MIT",
   "repository": "seognil-lab/type-done",
