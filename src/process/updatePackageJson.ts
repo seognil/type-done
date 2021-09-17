@@ -10,42 +10,56 @@ export const updatePackageJson = async ({
   unusedTypes,
   usefulTypes,
 }: PatchBundle) => {
+  const hasDepsObj = pkgJson.dependencies !== undefined;
+  const hasDevDepsObj = pkgJson.devDependencies !== undefined;
+
   if (!pkgJson.dependencies) pkgJson.dependencies = {};
   if (!pkgJson.devDependencies) pkgJson.devDependencies = {};
 
-  const dependencies = pkgJson.dependencies;
-  const devDependencies = pkgJson.devDependencies;
+  const deps = pkgJson.dependencies;
+  const devDeps = pkgJson.devDependencies;
 
-  // * ----------------
+  // * ---------------- skips
 
   if (!argv['skip-add']) {
     usefulTypes.forEach((e) => {
-      devDependencies[e.pkgName] = `^${e.lastVer}`;
+      devDeps[e.pkgName] = `^${e.lastVer}`;
     });
   }
 
   if (!argv['skip-remove']) {
     deprecatedTypes.forEach((e) => {
-      delete dependencies[e.pkgName];
-      delete devDependencies[e.pkgName];
+      delete deps[e.pkgName];
+      delete devDeps[e.pkgName];
     });
     unusedTypes.forEach((e) => {
-      delete dependencies[e];
-      delete devDependencies[e];
+      delete deps[e];
+      delete devDeps[e];
     });
   }
 
   if (!argv['skip-sort']) {
-    Object.keys(dependencies).forEach((e) => {
+    Object.keys(deps).forEach((e) => {
       if (isTypes(e)) {
-        devDependencies[e] = dependencies[e];
-        delete dependencies[e];
+        devDeps[e] = deps[e];
+        delete deps[e];
       }
     });
 
-    pkgJson.dependencies = sortKeys(pkgJson.dependencies);
-    pkgJson.devDependencies = sortKeys(pkgJson.devDependencies);
+    pkgJson.dependencies = sortKeys(deps);
+    pkgJson.devDependencies = sortKeys(devDeps);
   }
+
+  // * ---------------- minimal change cleanup
+
+  if (!hasDepsObj && Object.keys(deps).length === 0) {
+    delete pkgJson.dependencies;
+  }
+  if (!hasDevDepsObj && Object.keys(devDeps).length === 0) {
+    delete pkgJson.devDependencies;
+  }
+
+  // * ---------------- update
 
   await jsonfile.writeFile(pkgPath, pkgJson, { spaces: 2 });
 };

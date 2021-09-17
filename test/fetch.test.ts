@@ -2,6 +2,8 @@ import { fetchList, fetchSingle } from '../src/process/fetchUtils';
 import { checkPkgDeps } from './../src/process/checkPkgDepsByJson';
 import { pkgObjCase } from './data-case';
 
+// TODO fix jest runtime config later // Seognil LC 2021/09/17
+
 describe('test fetch single', () => {
   test('deprecated', async () => {
     const result = await fetchSingle('@types/ora');
