@@ -1,13 +1,13 @@
 import { execSync } from 'child_process';
 import fs from 'fs';
 import jsonfile from 'jsonfile';
-import path from 'path';
+import { resolve } from 'path';
 import rimraf from 'rimraf';
 
 // * ----------------------------------------------------------------
 
-const testDirPath = path.resolve(__dirname);
-const testNodemodulesPath = path.resolve(testDirPath, './node_modules');
+const testDirPath = resolve(__dirname);
+const testNodemodulesPath = resolve(testDirPath, './node_modules');
 
 const runTypeDone = (opts: string = '') => {
   // * clear node_modules
@@ -28,8 +28,7 @@ const runTypeDone = (opts: string = '') => {
 
 // * ----------------------------------------------------------------
 
-const readPkg = (p: string) =>
-  jsonfile.readFileSync(path.resolve(testDirPath, p));
+const readPkg = (p: string) => jsonfile.readFileSync(resolve(testDirPath, p));
 
 const jsonOrigin = readPkg('./package.origin.json');
 

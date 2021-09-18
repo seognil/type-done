@@ -3,14 +3,16 @@ import chalk from 'chalk';
 import { execSync } from 'child_process';
 import commandExists from 'command-exists';
 import figures from 'figures';
+import jsonfile from 'jsonfile';
+import pkgUp from 'pkg-up';
 import prettyMs from 'pretty-ms';
 import ora from 'ora';
 import registryUrl from 'registry-url';
 import fetch from 'node-fetch';
 import pLimit from 'p-limit';
+import { existsSync } from 'fs';
+import { dirname, resolve } from 'path';
 import yargs from 'yargs';
-import jsonfile from 'jsonfile';
-import pkgUp from 'pkg-up';
 import sortKeys from 'sort-keys';
 
 /*! *****************************************************************************
@@ -81,26 +83,29 @@ const checkPkgDeps = (json) => {
     return { installedTypes, missedTypes, unusedTypes };
 };
 
-const pkgPath = (() => {
-    const pkgPath = pkgUp.sync();
-    if (pkgPath === null) {
-        console.error('No package.json file found!');
-        process.exit();
-    }
-    return pkgPath;
-})();
-const pkgJson = jsonfile.readFileSync(pkgPath);
-// @ts-ignore
-const pkgVersion = pkgJson.version;
-
 var _a;
 // * ----------------------------------------------------------------
 const NPM_MANAGER_LIST = ['yarn', 'tnpm', 'pnpm', 'npm'];
 const DEFAULT_MANAGER = (_a = NPM_MANAGER_LIST.find((tool) => commandExists.sync(tool))) !== null && _a !== void 0 ? _a : 'npm';
 const DEFAULT_PARALLEL = 10;
 // * ----------------------------------------------------------------
+// ! a bit tricky // Seognil LC 2021/09/18
+const getTypeDonePkgVersion = () => {
+    let searchRoot = dirname(new URL(import.meta.url).pathname);
+    let pkgFile = resolve(searchRoot, './package.json');
+    let failedCount = 0;
+    while (!existsSync(pkgFile)) {
+        searchRoot = dirname(searchRoot);
+        pkgFile = resolve(searchRoot, './package.json');
+        failedCount++;
+        if (failedCount > 10)
+            return 'unknown';
+    }
+    return jsonfile.readFileSync(pkgFile).version;
+};
+// * ----------------------------------------------------------------
 const argv = yargs(process.argv.slice(2))
-    .version(pkgVersion)
+    .version(getTypeDonePkgVersion())
     .options({
     'tool': {
         alias: 't',
@@ -209,7 +214,7 @@ const logAnalyzedList = ({ deprecatedTypes, unusedTypes, usefulTypes, }) => {
     });
 };
 
-const updatePackageJson = ({ deprecatedTypes, unusedTypes, usefulTypes, }) => __awaiter(void 0, void 0, void 0, function* () {
+const updatePackageJson = (pkgPath, pkgJson, { deprecatedTypes, unusedTypes, usefulTypes }) => __awaiter(void 0, void 0, void 0, function* () {
     const hasDepsObj = pkgJson.dependencies !== undefined;
     const hasDevDepsObj = pkgJson.devDependencies !== undefined;
     if (!pkgJson.dependencies)
@@ -257,6 +262,12 @@ const updatePackageJson = ({ deprecatedTypes, unusedTypes, usefulTypes, }) => __
 
 // * ================================================================================
 const task = () => __awaiter(void 0, void 0, void 0, function* () {
+    const pkgPath = pkgUp.sync();
+    if (pkgPath === null) {
+        console.error('No package.json file found!');
+        process.exit();
+    }
+    const pkgJson = jsonfile.readFileSync(pkgPath);
     // * ---------------- static package analyzing
     const { installedTypes, unusedTypes, missedTypes } = checkPkgDeps(pkgJson);
     // * ---------------- fetching info
@@ -279,7 +290,7 @@ const task = () => __awaiter(void 0, void 0, void 0, function* () {
     if (argv['dry-run'])
         return;
     // * ---------------- update package.json
-    yield updatePackageJson(patchBundle);
+    yield updatePackageJson(pkgPath, pkgJson, patchBundle);
     // * ---------------- install
     if (argv['skip-install'])
         return;

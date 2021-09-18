@@ -2,14 +2,13 @@ import jsonfile from 'jsonfile';
 import sortKeys from 'sort-keys';
 import { isTypes } from './nameMapper';
 import { argv } from './parseCliArgs';
-import { pkgJson, pkgPath } from './readPkgJson';
-import { PatchBundle } from './types';
+import { PatchBundle, PkgJsonObj } from './types';
 
-export const updatePackageJson = async ({
-  deprecatedTypes,
-  unusedTypes,
-  usefulTypes,
-}: PatchBundle) => {
+export const updatePackageJson = async (
+  pkgPath: string,
+  pkgJson: PkgJsonObj,
+  { deprecatedTypes, unusedTypes, usefulTypes }: PatchBundle,
+) => {
   const hasDepsObj = pkgJson.dependencies !== undefined;
   const hasDevDepsObj = pkgJson.devDependencies !== undefined;
 

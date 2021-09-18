@@ -5,6 +5,7 @@
     ],
     "target": "ES6",
     "module": "ESNext",
+    "moduleResolution": "Node",
     "allowJs": true,
     "strict": true,
     "esModuleInterop": true,
