@@ -5,7 +5,7 @@ import { execSync } from 'child_process';
 import commandExists from 'command-exists';
 import figures from 'figures';
 import jsonfile from 'jsonfile';
-import pkgUp from 'pkg-up';
+import { pkgUpSync } from 'pkg-up';
 import prettyMs from 'pretty-ms';
 import { checkPkgDeps } from './process/checkPkgDepsByJson';
 import { fetchDepsInfo } from './process/fetchDepsInfo';
@@ -17,9 +17,9 @@ import { updatePackageJson } from './process/updatePackageJson';
 // * ================================================================================
 
 const task = async () => {
-  const pkgPath = pkgUp.sync();
+  const pkgPath = pkgUpSync();
 
-  if (pkgPath === null) {
+  if (pkgPath === undefined) {
     console.error('No package.json file found!');
     process.exit();
   }
