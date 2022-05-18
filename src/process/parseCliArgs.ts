@@ -1,8 +1,6 @@
 import commandExists from 'command-exists';
-import { existsSync } from 'fs';
-import jsonfile from 'jsonfile';
-import { dirname, resolve } from 'path';
 import yargs from 'yargs';
+import { version } from '../../package.json';
 
 // * ----------------------------------------------------------------
 
@@ -15,27 +13,8 @@ const DEFAULT_PARALLEL = 10;
 
 // * ----------------------------------------------------------------
 
-// ! a bit tricky // Seognil LC 2021/09/18
-const getTypeDonePkgVersion = () => {
-  let searchRoot = dirname(new URL(import.meta.url).pathname);
-  let pkgFile = resolve(searchRoot, './package.json');
-
-  let failedCount = 0;
-  while (!existsSync(pkgFile)) {
-    searchRoot = dirname(searchRoot);
-    pkgFile = resolve(searchRoot, './package.json');
-
-    failedCount++;
-    if (failedCount > 10) return 'unknown';
-  }
-
-  return jsonfile.readFileSync(pkgFile).version as string;
-};
-
-// * ----------------------------------------------------------------
-
 export const argv = yargs(process.argv.slice(2))
-  .version(getTypeDonePkgVersion())
+  .version(version)
   .options({
     'tool': {
       alias: 't',

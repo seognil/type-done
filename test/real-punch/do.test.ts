@@ -21,7 +21,7 @@ const runTypeDone = (opts: string = '') => {
 
   execSync(
     // `cd ${testDirPath}; ../../node_modules/ts-node/dist/bin.js ../../src/app.ts ${opts} -s`,
-    `cd ${testDirPath}; node ../../index.js ${opts} -s`,
+    `cd ${testDirPath}; node ../../dist/app.js ${opts} -s`,
     { stdio: 'inherit' },
   );
 };

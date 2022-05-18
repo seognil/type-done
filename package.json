@@ -5,9 +5,9 @@
   "license": "MIT",
   "repository": "seognil-lab/type-done",
   "type": "module",
-  "exports": "./index.js",
+  "exports": "./dist/app.js",
   "bin": {
-    "type-done": "index.js"
+    "type-done": "dist/app.js"
   },
   "author": {
     "name": "Seognil LC",
@@ -16,8 +16,9 @@
   },
   "scripts": {
     "test": "jest",
-    "build": "rollup -c",
-    "release": "release-it"
+    "build": "tsup src/app.ts --format=esm",
+    "release": "release-it --'hooks.after:bump=\"npm run build\"'",
+    "pretty": "prettier -w src/** --plugin-search-dir=."
   },
   "engines": {
     "node": ">=12"
@@ -54,7 +55,6 @@
   "devDependencies": {
     "@babel/preset-env": "^7.15.6",
     "@babel/preset-typescript": "^7.15.0",
-    "@rollup/plugin-typescript": "^8.2.5",
     "@types/babel__preset-env": "^7.9.2",
     "@types/command-exists": "^1.2.0",
     "@types/jest": "^27.0.1",
@@ -68,8 +68,6 @@
     "prettier-plugin-organize-imports": "^2.3.3",
     "release-it": "^14.2.0",
     "rimraf": "^3.0.2",
-    "rollup": "^2.23.0",
-    "rollup-plugin-hashbang": "^2.2.2",
     "ts-jest": "^27.0.5",
     "ts-node": "^10.2.1",
     "tslib": "^2.0.0",
