@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest';
 import { fetchList, fetchSingle } from '../src/process/fetchUtils';
 import { checkPkgDeps } from './../src/process/checkPkgDepsByJson';
 import { pkgObjCase } from './data-case';

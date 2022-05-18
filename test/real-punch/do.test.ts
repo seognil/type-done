@@ -3,6 +3,7 @@ import fs from 'fs';
 import jsonfile from 'jsonfile';
 import { resolve } from 'path';
 import rimraf from 'rimraf';
+import { describe, expect, test } from 'vitest';
 
 // * ----------------------------------------------------------------
 
@@ -47,8 +48,6 @@ const jsonResultShouldMatch = (jsonTarget: any) => {
 };
 
 // * ----------------------------------------------------------------
-
-jest.setTimeout(90000);
 
 describe('run test', () => {
   test('should run correctly', () => {

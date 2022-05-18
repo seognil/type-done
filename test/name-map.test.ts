@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest';
 import { depName2typeName, typeName2depName } from '../src/process/nameMapper';
 
 describe('test package name mapping', () => {
