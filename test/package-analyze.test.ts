@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { checkPkgDeps } from '../src/process/checkPkgDepsByJson';
+import { checkPkgDeps } from '../draft/process/checkPkgDepsByJson';
 import { pkgObjCase } from './data-case';
 
 describe('test pkg parsing', () => {
@@ -13,11 +13,7 @@ describe('test pkg parsing', () => {
 
   test('case 1', () => {
     expect(checkPkgDeps(pkgObjCase)).toEqual({
-      installedTypes: [
-        '@types/chalk',
-        '@types/ora',
-        '@types/terser-webpack-plugin',
-      ],
+      installedTypes: ['@types/chalk', '@types/ora', '@types/terser-webpack-plugin'],
       unusedTypes: ['@types/terser-webpack-plugin'],
       missedTypes: [
         '@types/args',

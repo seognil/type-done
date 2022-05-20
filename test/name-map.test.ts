@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { depName2typeName, typeName2depName } from '../src/process/nameMapper';
+import { depName2typeName, typeName2depName } from '../src/logic/typeNameMapper';
 
 describe('test package name mapping', () => {
   test('ora', () => {

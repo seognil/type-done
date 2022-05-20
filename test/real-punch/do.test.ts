@@ -39,12 +39,8 @@ const jsonResultShouldMatch = (jsonTarget: any) => {
   const listDeps = (pkg: any, field: string) => Object.keys(pkg[field]);
   // .sort((a, b) => (a < b ? -1 : 1));
 
-  expect(listDeps(jsonResult, 'devDependencies')).toEqual(
-    listDeps(jsonTarget, 'devDependencies'),
-  );
-  expect(listDeps(jsonResult, 'dependencies')).toEqual(
-    listDeps(jsonTarget, 'dependencies'),
-  );
+  expect(listDeps(jsonResult, 'devDependencies')).toEqual(listDeps(jsonTarget, 'devDependencies'));
+  expect(listDeps(jsonResult, 'dependencies')).toEqual(listDeps(jsonTarget, 'dependencies'));
 };
 
 // * ----------------------------------------------------------------

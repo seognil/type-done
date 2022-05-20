@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { fetchList, fetchSingle } from '../src/process/fetchUtils';
-import { checkPkgDeps } from './../src/process/checkPkgDepsByJson';
+import { fetchList, fetchSingle } from '../draft/process/fetchUtils';
+import { checkPkgDeps } from '../draft/process/checkPkgDepsByJson';
 import { pkgObjCase } from './data-case';
 
 // TODO fix jest runtime config later // Seognil LC 2021/09/17
